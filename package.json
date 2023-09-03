@@ -21,7 +21,7 @@
   "module": "dist/index.mjs",
   "typings": "dist/index.d.ts",
   "bin": {
-    "vited-create": "dist/create.js"
+    "vited-create": "dist/vited-create.js"
   },
   "files": [
     "dist",
