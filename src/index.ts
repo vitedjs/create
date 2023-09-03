@@ -1,9 +1,8 @@
 export interface Options {
   repeat?: number;
+  install?: true | string;
 }
 
-export function action(word: string, { repeat = 1 }: Options) {
-  for (let i = 0; i < Number(repeat); i++) {
-    console.log(word);
-  }
+export function action(word: string, options: Options) {
+  console.log(options);
 }
