@@ -1,8 +1,10 @@
+import { join } from 'node:path';
+
 export interface Options {
-  repeat?: number;
+  template?: number;
   install?: true | string;
 }
 
-export function action(word: string, options: Options) {
-  console.log(options);
+export function create(project: string | null, { template, install }: Options) {
+  const projectFullPath = project ? join(process.cwd(), project) : process.cwd();
 }
