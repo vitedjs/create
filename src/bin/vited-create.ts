@@ -12,9 +12,10 @@ program
   )
   .option('--template <template-package>', 'Template package name. Default: @vited/template-react')
   .option(
-    '--install [package-manager]',
-    'Install node moduels after initialization. You can specify a package manager (npm/yarn/pnpm/cnpm/tnpm). Default: npm'
+    '--package-manager <package-manager>',
+    'Package manager for template download and node module installation. Default: npm'
   )
+  .option('--no-install', 'Skip node module installation after initialization.')
   .action(create);
 
 program.helpOption('-h, --help', 'Show full help');
