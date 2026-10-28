@@ -5,6 +5,7 @@ import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { setLanguage } from './i18n.js';
 import { create, resolvePackageManager } from './index.js';
 
 const createOptions = {
@@ -16,6 +17,7 @@ const createOptions = {
 let temporaryDirectory: string;
 
 beforeEach(async () => {
+  await setLanguage('en');
   temporaryDirectory = await mkdtemp(path.join(os.tmpdir(), 'vited-create-test-'));
 });
 

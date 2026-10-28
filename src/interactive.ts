@@ -2,49 +2,50 @@ import process from 'node:process';
 
 import { cancel, confirm, intro, isCancel, outro, select, text } from '@clack/prompts';
 
+import { t } from './i18n.js';
 import { create, resolvePackageManager, THEMES, type Theme } from './index.js';
 
 export async function runInteractive(): Promise<void> {
   if (!process.stdin.isTTY || !process.stdout.isTTY) {
-    throw new Error('Interactive mode requires a terminal. Use --help for command-line options.');
+    throw new Error(t('interactive.terminalRequired'));
   }
 
-  intro('Set up Vited documentation');
+  intro(t('interactive.intro'));
 
   const defaultDirectory = process.cwd();
   const directory = await text({
-    message: 'Project directory',
+    message: t('interactive.projectDirectory'),
     placeholder: defaultDirectory,
     initialValue: defaultDirectory,
     validate(value) {
       if (!value?.trim()) {
-        return 'Please enter a directory.';
+        return t('interactive.directoryRequired');
       }
       return;
     },
   });
   if (isCancel(directory)) {
-    cancel('Setup cancelled.');
+    cancel(t('interactive.cancelled'));
     return;
   }
 
   const packageManager = await resolvePackageManager(directory);
 
   const theme = await select({
-    message: 'Choose a theme',
+    message: t('interactive.chooseTheme'),
     options: THEMES.map((value) => ({ value, label: value })),
   });
   if (isCancel(theme)) {
-    cancel('Setup cancelled.');
+    cancel(t('interactive.cancelled'));
     return;
   }
 
   const install = await confirm({
-    message: 'Install dependencies now?',
+    message: t('interactive.installDependencies'),
     initialValue: true,
   });
   if (isCancel(install)) {
-    cancel('Setup cancelled.');
+    cancel(t('interactive.cancelled'));
     return;
   }
 
@@ -54,5 +55,5 @@ export async function runInteractive(): Promise<void> {
     packageManager,
     install,
   });
-  outro(`Vited documentation configured at ${result.projectPath}`);
+  outro(t('cli.configured', { path: result.projectPath }));
 }

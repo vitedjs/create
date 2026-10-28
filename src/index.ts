@@ -3,6 +3,8 @@ import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 
+import { t } from './i18n.js';
+
 export const THEMES = ['@vited/theme-mantine'] as const;
 export type Theme = (typeof THEMES)[number];
 export type PackageManager = 'npm' | 'pnpm' | 'yarn' | 'bun';
@@ -53,7 +55,13 @@ export async function resolvePackageManager(
   try {
     packageJson = JSON.parse(await readFile(packageJsonPath, 'utf8'));
   } catch (error) {
-    if (!isNodeError(error, 'ENOENT')) {
+    if (isNodeError(error, 'ENOENT')) {
+      packageJson = undefined;
+    } else if (error instanceof SyntaxError) {
+      throw new SyntaxError(t('errors.invalidPackageJsonSyntax', { path: packageJsonPath }), {
+        cause: error,
+      });
+    } else {
       throw error;
     }
   }
@@ -61,14 +69,15 @@ export async function resolvePackageManager(
   if (isRecord(packageJson) && packageJson['packageManager'] !== undefined) {
     const configuredPackageManager = packageJson['packageManager'];
     if (typeof configuredPackageManager !== 'string') {
-      throw new TypeError(
-        `Invalid package.json: packageManager must be a string in ${packageJsonPath}`,
-      );
+      throw new TypeError(t('errors.invalidPackageManagerType', { path: packageJsonPath }));
     }
     const packageManager = getPackageManager(configuredPackageManager);
     if (!packageManager) {
-      throw new Error(
-        `Unsupported package manager in ${packageJsonPath}: ${configuredPackageManager}`,
+      throw new TypeError(
+        t('errors.unsupportedPackageManager', {
+          path: packageJsonPath,
+          packageManager: configuredPackageManager,
+        }),
       );
     }
     return packageManager;
@@ -97,9 +106,7 @@ export async function resolvePackageManager(
     if (invokedPackageManager && lockfileManagers.has(invokedPackageManager)) {
       return invokedPackageManager;
     }
-    throw new Error(
-      `Multiple package manager lockfiles found in ${projectPath}. Set packageManager in package.json.`,
-    );
+    throw new Error(t('errors.multipleLockfiles', { path: projectPath }));
   }
 
   return invokedPackageManager ?? 'pnpm';
@@ -149,7 +156,11 @@ export async function installPackages(
       if (code === 0) {
         resolve();
       } else {
-        reject(new Error(`${packageManager} install exited with code ${code ?? 'unknown'}`));
+        reject(
+          new Error(
+            t('errors.installFailed', { packageManager, code: code === null ? 'unknown' : code }),
+          ),
+        );
       }
     });
   });
@@ -168,7 +179,7 @@ async function validateTarget(projectPath: string): Promise<ProjectMode> {
   }
 
   if (!projectStat.isDirectory()) {
-    throw new Error(`Project path is not a directory: ${projectPath}`);
+    throw new Error(t('errors.projectNotDirectory', { path: projectPath }));
   }
 
   const configPath = path.join(projectPath, 'vited.config.ts');
@@ -182,16 +193,14 @@ async function validateTarget(projectPath: string): Promise<ProjectMode> {
     }
   }
   if (configExists) {
-    throw new Error(
-      `Vited is already configured in ${projectPath}. Remove or rename vited.config.ts before initializing again.`,
-    );
+    throw new Error(t('errors.alreadyConfigured', { path: projectPath }));
   }
 
   const docsPath = path.join(projectPath, 'docs');
   try {
     const docsStat = await stat(docsPath);
     if (!docsStat.isDirectory()) {
-      throw new Error(`Cannot create documentation: ${docsPath} is not a directory.`);
+      throw new Error(t('errors.docsNotDirectory', { path: docsPath }));
     }
   } catch (error) {
     if (!isNodeError(error, 'ENOENT')) {
@@ -208,9 +217,19 @@ async function readProjectPackageJson(
 ): Promise<ProjectPackageJson> {
   try {
     const contents = await readFile(packageJsonPath, 'utf8');
-    const value: unknown = JSON.parse(contents);
+    let value: unknown;
+    try {
+      value = JSON.parse(contents);
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        throw new SyntaxError(t('errors.invalidPackageJsonSyntax', { path: packageJsonPath }), {
+          cause: error,
+        });
+      }
+      throw error;
+    }
     if (!isRecord(value)) {
-      throw new Error(`Invalid package.json: expected a JSON object in ${packageJsonPath}`);
+      throw new TypeError(t('errors.invalidPackageJson', { path: packageJsonPath }));
     }
     return value;
   } catch (error) {
@@ -257,7 +276,7 @@ function getRecord(value: unknown, name: string): Record<string, unknown> {
     return {};
   }
   if (!isRecord(value)) {
-    throw new Error(`Invalid package.json: ${name} must be an object.`);
+    throw new Error(t('errors.invalidPackageJsonField', { field: name }));
   }
   return value;
 }
@@ -335,7 +354,7 @@ function makeReadme(packageJson: ProjectPackageJson): string {
     typeof packageJson['name'] === 'string' && packageJson['name'].length > 0
       ? packageJson['name']
       : 'Vited documentation';
-  return `# ${title}\n\nWelcome to your Vited documentation site.\n`;
+  return `# ${title}\n\n${t('template.docsWelcome')}\n`;
 }
 
 async function writeIfMissing(filePath: string, content: string): Promise<void> {

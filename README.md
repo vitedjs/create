@@ -12,6 +12,9 @@ directory, and the package manager is detected automatically:
 pnpm dlx @vited/create
 ```
 
+The language follows the system locale (`zh` for Chinese locales, otherwise
+`en`). Override it with `--lang en` or `--lang zh`.
+
 ## Command-line setup
 
 ```bash
