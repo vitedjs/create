@@ -23,7 +23,7 @@
   },
   "funding": "https://ko-fi.com/guoyunhe",
   "bin": {
-    "vited-create": "./dist/bin/vited-create.mjs"
+    "vited-create": "./dist/vited-create.mjs"
   },
   "files": [
     "dist",
@@ -42,13 +42,15 @@
   },
   "scripts": {
     "build": "tsdown",
+    "dev": "tsx src/vited-create.ts",
+    "docs:build": "vited build",
+    "docs:dev": "vited dev",
     "format": "oxfmt --write .",
     "format:check": "oxfmt --check .",
     "lint": "oxlint",
     "prepare": "husky",
     "test": "vitest run",
-    "test:watch": "vitest",
-    "watch": "node-scripts watch"
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@clack/prompts": "^1.8.1",
@@ -56,18 +58,24 @@
   },
   "devDependencies": {
     "@guoyunhe/editorconfig": "^0.3.0",
-    "@guoyunhe/node-scripts": "^2.2.0",
     "@guoyunhe/oxfmt-config": "^1.1.0",
     "@tsconfig/node20": "^20.1.2",
     "@tsconfig/strictest": "^2.0.2",
     "@types/node": "^20.5.8",
+    "@vited/cli": "^0.1.0",
+    "@vited/core": "^0.1.0",
+    "@vited/theme-mantine": "^0.1.0",
     "husky": "^9.1.7",
     "lint-staged": "^17.6.0",
     "oxfmt": "^0.75.0",
     "oxlint": "^1.90.0",
     "oxlint-config-recommended": "^1.1.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
     "tsdown": "^0.23.2",
+    "tsx": "^4.23.15",
     "typescript": "^5.2.2",
+    "vite": "^8.3.5",
     "vitest": "^5.0.5"
   },
   "lint-staged": {
@@ -77,9 +85,6 @@
     ],
     "*.css": "oxfmt --write",
     "*.{json,jsonc,scss,less,htm,html,md,mdx,yaml,yml}": "oxfmt --write"
-  },
-  "eslintConfig": {
-    "extends": "@guoyunhe/node-scripts"
   },
   "devEngines": {
     "packageManager": {

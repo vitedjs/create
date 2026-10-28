@@ -1,2 +1,6 @@
 allowBuilds:
   esbuild: false
+minimumReleaseAgeExclude:
+  - '@vited/cli@0.1.0'
+  - '@vited/core@0.1.0'
+  - '@vited/theme-mantine@0.1.0'

@@ -1,11 +1,12 @@
 # @vited/create
 
-Create a new Vited documentation project or add Vited to an existing project.
+Set up Vited documentation in the current project or another project directory.
 
 ## Interactive setup
 
-Run without arguments to choose the project mode, directory, theme, package
-manager, and whether to install dependencies:
+Run without arguments to choose the project directory and theme, and whether to
+install dependencies. The project directory defaults to the current working
+directory, and the package manager is detected automatically:
 
 ```bash
 pnpm dlx @vited/create
@@ -13,21 +14,14 @@ pnpm dlx @vited/create
 
 ## Command-line setup
 
-Create a new project:
-
 ```bash
-pnpm dlx @vited/create my-docs
+pnpm dlx @vited/create .
+pnpm dlx @vited/create ../my-docs
 ```
 
-Initialize the current directory or another existing project:
-
-```bash
-pnpm dlx @vited/create . --init
-pnpm dlx @vited/create ../existing-project --init
-```
-
-The default theme is `@vited/theme-mantine`. Select a package manager and skip
-automatic dependency installation with:
+The default theme is `@vited/theme-mantine`. The package manager is detected
+from the project configuration or the package manager used to run the command.
+Override it and skip automatic dependency installation with:
 
 ```bash
 pnpm dlx @vited/create my-docs \

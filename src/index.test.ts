@@ -5,10 +5,9 @@ import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { create } from './index.js';
+import { create, resolvePackageManager } from './index.js';
 
 const createOptions = {
-  mode: 'create' as const,
   theme: '@vited/theme-mantine' as const,
   packageManager: 'pnpm' as const,
   install: false,
@@ -28,8 +27,9 @@ describe('create', () => {
   it('creates a project with Vited dependencies, scripts, config, and docs', async () => {
     const projectPath = path.join(temporaryDirectory, 'new-site');
 
-    await create({ ...createOptions, directory: projectPath });
+    const result = await create({ ...createOptions, directory: projectPath });
 
+    expect(result.mode).toBe('create');
     const packageJson = JSON.parse(await readFile(path.join(projectPath, 'package.json'), 'utf8'));
     expect(packageJson.scripts).toMatchObject({
       'docs:dev': 'vited dev',
@@ -62,12 +62,9 @@ describe('create', () => {
     );
     await writeFile(path.join(projectPath, 'docs/README.md'), '# Existing docs\n');
 
-    await create({
-      ...createOptions,
-      mode: 'init',
-      directory: projectPath,
-    });
+    const result = await create({ ...createOptions, directory: projectPath });
 
+    expect(result.mode).toBe('init');
     const packageJson = JSON.parse(await readFile(path.join(projectPath, 'package.json'), 'utf8'));
     expect(packageJson.scripts).toMatchObject({
       test: 'vitest run',
@@ -82,14 +79,16 @@ describe('create', () => {
     expect(existsSync(path.join(projectPath, 'index.html'))).toBe(false);
   });
 
-  it('rejects a non-empty directory when creating a new project', async () => {
+  it('initializes an existing non-empty directory automatically', async () => {
     const projectPath = path.join(temporaryDirectory, 'occupied');
     await mkdir(projectPath);
     await writeFile(path.join(projectPath, 'notes.txt'), 'keep');
 
-    await expect(create({ ...createOptions, directory: projectPath })).rejects.toThrow(
-      'Use --init to initialize an existing project.',
-    );
+    const result = await create({ ...createOptions, directory: projectPath });
+
+    expect(result.mode).toBe('init');
+    expect(await readFile(path.join(projectPath, 'notes.txt'), 'utf8')).toBe('keep');
+    await readFile(path.join(projectPath, 'vited.config.ts'), 'utf8');
   });
 
   it('does not overwrite an existing Vited config', async () => {
@@ -97,11 +96,40 @@ describe('create', () => {
     await mkdir(projectPath);
     await writeFile(path.join(projectPath, 'vited.config.ts'), '// keep');
 
-    await expect(
-      create({ ...createOptions, mode: 'init', directory: projectPath }),
-    ).rejects.toThrow('Remove or rename vited.config.ts');
+    await expect(create({ ...createOptions, directory: projectPath })).rejects.toThrow(
+      'Remove or rename vited.config.ts',
+    );
     await expect(readFile(path.join(projectPath, 'vited.config.ts'), 'utf8')).resolves.toBe(
       '// keep',
     );
+  });
+});
+
+describe('resolvePackageManager', () => {
+  it('prefers the project packageManager field over the invoking package manager', async () => {
+    await writeFile(
+      path.join(temporaryDirectory, 'package.json'),
+      JSON.stringify({ packageManager: 'yarn@4.1.0' }),
+    );
+
+    await expect(
+      resolvePackageManager(temporaryDirectory, {
+        npm_config_user_agent: 'pnpm/10.0.0 node/v22.0.0',
+      }),
+    ).resolves.toBe('yarn');
+  });
+
+  it('detects the package manager from the invoking command', async () => {
+    await expect(
+      resolvePackageManager(temporaryDirectory, {
+        npm_config_user_agent: 'bun/1.2.0 npm/? node/v22.0.0',
+      }),
+    ).resolves.toBe('bun');
+  });
+
+  it('detects the package manager from a project lockfile', async () => {
+    await writeFile(path.join(temporaryDirectory, 'yarn.lock'), '');
+
+    await expect(resolvePackageManager(temporaryDirectory, {})).resolves.toBe('yarn');
   });
 });

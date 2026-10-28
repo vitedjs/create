@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process';
-import { mkdir, readFile, readdir, stat, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import process from 'node:process';
 
 export const THEMES = ['@vited/theme-mantine'] as const;
 export type Theme = (typeof THEMES)[number];
@@ -8,11 +9,15 @@ export type PackageManager = 'npm' | 'pnpm' | 'yarn' | 'bun';
 export type ProjectMode = 'create' | 'init';
 
 export interface CreateOptions {
-  mode: ProjectMode;
   directory: string;
   theme: Theme;
   packageManager: PackageManager;
   install: boolean;
+}
+
+export interface CreateResult {
+  projectPath: string;
+  mode: ProjectMode;
 }
 
 interface ProjectPackageJson {
@@ -28,15 +33,86 @@ const vitedPackages: Record<string, string> = {
   vite: '^8.3.5',
 };
 
+const packageManagerLockfiles: Record<string, PackageManager> = {
+  'bun.lock': 'bun',
+  'bun.lockb': 'bun',
+  'npm-shrinkwrap.json': 'npm',
+  'package-lock.json': 'npm',
+  'pnpm-lock.yaml': 'pnpm',
+  'yarn.lock': 'yarn',
+};
+
+export async function resolvePackageManager(
+  projectPath: string,
+  environment: NodeJS.ProcessEnv = process.env,
+): Promise<PackageManager> {
+  const resolvedProjectPath = path.resolve(projectPath);
+  const packageJsonPath = path.join(resolvedProjectPath, 'package.json');
+  let packageJson: unknown;
+
+  try {
+    packageJson = JSON.parse(await readFile(packageJsonPath, 'utf8'));
+  } catch (error) {
+    if (!isNodeError(error, 'ENOENT')) {
+      throw error;
+    }
+  }
+
+  if (isRecord(packageJson) && packageJson['packageManager'] !== undefined) {
+    const configuredPackageManager = packageJson['packageManager'];
+    if (typeof configuredPackageManager !== 'string') {
+      throw new TypeError(
+        `Invalid package.json: packageManager must be a string in ${packageJsonPath}`,
+      );
+    }
+    const packageManager = getPackageManager(configuredPackageManager);
+    if (!packageManager) {
+      throw new Error(
+        `Unsupported package manager in ${packageJsonPath}: ${configuredPackageManager}`,
+      );
+    }
+    return packageManager;
+  }
+
+  const lockfileManagers = new Set<PackageManager>();
+  for (const [lockfile, packageManager] of Object.entries(packageManagerLockfiles)) {
+    if (await fileExists(path.join(resolvedProjectPath, lockfile))) {
+      lockfileManagers.add(packageManager);
+    }
+  }
+
+  const invokedPackageManager =
+    getPackageManager(environment['npm_config_user_agent'] ?? '') ??
+    getPackageManager(
+      path
+        .basename(environment['npm_execpath'] ?? '')
+        .replace(/\.[^.]+$/, '')
+        .replace(/-cli$/, ''),
+    );
+
+  if (lockfileManagers.size === 1) {
+    return [...lockfileManagers][0]!;
+  }
+  if (lockfileManagers.size > 1) {
+    if (invokedPackageManager && lockfileManagers.has(invokedPackageManager)) {
+      return invokedPackageManager;
+    }
+    throw new Error(
+      `Multiple package manager lockfiles found in ${projectPath}. Set packageManager in package.json.`,
+    );
+  }
+
+  return invokedPackageManager ?? 'pnpm';
+}
+
 export async function create({
-  mode,
   directory,
   theme,
   packageManager,
   install,
-}: CreateOptions): Promise<string> {
+}: CreateOptions): Promise<CreateResult> {
   const projectPath = path.resolve(directory);
-  await validateTarget(projectPath, mode);
+  const mode = await validateTarget(projectPath);
 
   const packageJsonPath = path.join(projectPath, 'package.json');
   const packageJson = await readProjectPackageJson(packageJsonPath, projectPath);
@@ -55,7 +131,7 @@ export async function create({
     await installPackages(projectPath, packageManager);
   }
 
-  return projectPath;
+  return { projectPath, mode };
 }
 
 export async function installPackages(
@@ -79,32 +155,20 @@ export async function installPackages(
   });
 }
 
-async function validateTarget(projectPath: string, mode: ProjectMode): Promise<void> {
+async function validateTarget(projectPath: string): Promise<ProjectMode> {
   let projectStat;
 
   try {
     projectStat = await stat(projectPath);
   } catch (error) {
-    if (isNodeError(error, 'ENOENT') && mode === 'create') {
-      return;
-    }
     if (isNodeError(error, 'ENOENT')) {
-      throw new Error(`Cannot initialize project: directory does not exist: ${projectPath}`, {
-        cause: error,
-      });
+      return 'create';
     }
     throw error;
   }
 
   if (!projectStat.isDirectory()) {
     throw new Error(`Project path is not a directory: ${projectPath}`);
-  }
-
-  const projectFiles = await readdir(projectPath);
-  if (mode === 'create' && projectFiles.length > 0) {
-    throw new Error(
-      `Directory is not empty: ${projectPath}. Use --init to initialize an existing project.`,
-    );
   }
 
   const configPath = path.join(projectPath, 'vited.config.ts');
@@ -134,6 +198,8 @@ async function validateTarget(projectPath: string, mode: ProjectMode): Promise<v
       throw error;
     }
   }
+
+  return 'init';
 }
 
 async function readProjectPackageJson(
@@ -202,6 +268,39 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isNodeError(error: unknown, code: string): error is NodeJS.ErrnoException {
   return error instanceof Error && 'code' in error && error.code === code;
+}
+
+function getPackageManager(value: string): PackageManager | undefined {
+  const match = /^(npm|pnpm|yarn|bun)(?:[@/]|$)/.exec(value);
+  switch (match?.[1]) {
+    case 'npm': {
+      return 'npm';
+    }
+    case 'pnpm': {
+      return 'pnpm';
+    }
+    case 'yarn': {
+      return 'yarn';
+    }
+    case 'bun': {
+      return 'bun';
+    }
+    default: {
+      return;
+    }
+  }
+}
+
+async function fileExists(filePath: string): Promise<boolean> {
+  try {
+    await stat(filePath);
+    return true;
+  } catch (error) {
+    if (isNodeError(error, 'ENOENT')) {
+      return false;
+    }
+    throw error;
+  }
 }
 
 function toPackageName(value: string): string {
