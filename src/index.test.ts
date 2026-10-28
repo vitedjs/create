@@ -32,6 +32,7 @@ describe('create', () => {
     const result = await create({ ...createOptions, directory: projectPath });
 
     expect(result.mode).toBe('create');
+    expect(result.configPath).toBe(path.join(projectPath, 'vited.config.ts'));
     const packageJson = JSON.parse(await readFile(path.join(projectPath, 'package.json'), 'utf8'));
     expect(packageJson.scripts).toMatchObject({
       'docs:dev': 'vited dev',
@@ -93,17 +94,37 @@ describe('create', () => {
     await readFile(path.join(projectPath, 'vited.config.ts'), 'utf8');
   });
 
-  it('does not overwrite an existing Vited config', async () => {
+  it('writes a comparison config when a Vited config already exists', async () => {
     const projectPath = path.join(temporaryDirectory, 'already-vited');
     await mkdir(projectPath);
     await writeFile(path.join(projectPath, 'vited.config.ts'), '// keep');
 
-    await expect(create({ ...createOptions, directory: projectPath })).rejects.toThrow(
-      'Remove or rename vited.config.ts',
-    );
+    const result = await create({ ...createOptions, directory: projectPath });
+
+    expect(result.configPath).toBe(path.join(projectPath, 'vited-new.config.ts'));
     await expect(readFile(path.join(projectPath, 'vited.config.ts'), 'utf8')).resolves.toBe(
       '// keep',
     );
+    await expect(readFile(result.configPath, 'utf8')).resolves.toContain(
+      'import { defineConfig } from',
+    );
+  });
+
+  it('overwrites an existing comparison config while preserving the original', async () => {
+    const projectPath = path.join(temporaryDirectory, 'already-vited');
+    await mkdir(projectPath);
+    await writeFile(path.join(projectPath, 'vited.config.ts'), '// keep');
+    await writeFile(path.join(projectPath, 'vited-new.config.ts'), '// compare');
+
+    await create({ ...createOptions, directory: projectPath });
+
+    expect(existsSync(path.join(projectPath, 'package.json'))).toBe(true);
+    await expect(readFile(path.join(projectPath, 'vited.config.ts'), 'utf8')).resolves.toBe(
+      '// keep',
+    );
+    await expect(
+      readFile(path.join(projectPath, 'vited-new.config.ts'), 'utf8'),
+    ).resolves.toContain('import { defineConfig } from');
   });
 });
 

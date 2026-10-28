@@ -18,7 +18,8 @@ const resources = {
         language: 'Language for prompts and messages',
         showHelp: 'Show full help',
         showVersion: 'Show version number',
-        configured: 'Vited documentation configured at {{path}}',
+        configured:
+          'Vited documentation configured at {{path}}. Configuration file: {{configPath}}',
       },
       interactive: {
         terminalRequired:
@@ -38,8 +39,6 @@ const resources = {
           'Multiple package manager lockfiles found in {{path}}. Set packageManager in package.json.',
         installFailed: '{{packageManager}} install exited with code {{code}}',
         projectNotDirectory: 'Project path is not a directory: {{path}}',
-        alreadyConfigured:
-          'Vited is already configured in {{path}}. Remove or rename vited.config.ts before running create again.',
         docsNotDirectory: 'Cannot create documentation: {{path}} is not a directory.',
         invalidPackageJson: 'Invalid package.json: expected a JSON object in {{path}}',
         invalidPackageJsonSyntax: 'Invalid JSON in package.json: {{path}}',
@@ -62,7 +61,7 @@ const resources = {
         language: '提示和消息使用的语言',
         showHelp: '显示帮助信息',
         showVersion: '显示版本号',
-        configured: '已在 {{path}} 配置 Vited 文档',
+        configured: '已在 {{path}} 配置 Vited 文档。配置文件：{{configPath}}',
       },
       interactive: {
         terminalRequired: '交互模式需要终端。请使用 --help 查看命令行选项。',
@@ -81,8 +80,6 @@ const resources = {
           '{{path}} 中存在多个包管理器锁文件，请在 package.json 中设置 packageManager。',
         installFailed: '{{packageManager}} install 退出，代码为 {{code}}',
         projectNotDirectory: '项目路径不是目录：{{path}}',
-        alreadyConfigured:
-          '{{path}} 已配置 Vited。请删除或重命名 vited.config.ts 后再运行 create。',
         docsNotDirectory: '无法创建文档：{{path}} 不是目录。',
         invalidPackageJson: 'package.json 无效：{{path}} 应为 JSON 对象',
         invalidPackageJsonSyntax: 'package.json 中的 JSON 无效：{{path}}',

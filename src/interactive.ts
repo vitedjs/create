@@ -55,5 +55,5 @@ export async function runInteractive(): Promise<void> {
     packageManager,
     install,
   });
-  outro(t('cli.configured', { path: result.projectPath }));
+  outro(t('cli.configured', { path: result.projectPath, configPath: result.configPath }));
 }

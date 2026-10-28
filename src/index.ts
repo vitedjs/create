@@ -20,10 +20,17 @@ export interface CreateOptions {
 export interface CreateResult {
   projectPath: string;
   mode: ProjectMode;
+  configPath: string;
 }
 
 interface ProjectPackageJson {
   [key: string]: unknown;
+}
+
+interface TargetValidation {
+  mode: ProjectMode;
+  configPath: string;
+  overwriteConfig: boolean;
 }
 
 const vitedPackages: Record<string, string> = {
@@ -119,7 +126,7 @@ export async function create({
   install,
 }: CreateOptions): Promise<CreateResult> {
   const projectPath = path.resolve(directory);
-  const mode = await validateTarget(projectPath);
+  const { mode, configPath, overwriteConfig } = await validateTarget(projectPath);
 
   const packageJsonPath = path.join(projectPath, 'package.json');
   const packageJson = await readProjectPackageJson(packageJsonPath, projectPath);
@@ -129,8 +136,8 @@ export async function create({
   const docsPath = path.join(projectPath, 'docs');
   await mkdir(docsPath, { recursive: true });
   await writeFile(packageJsonPath, `${JSON.stringify(packageJson, undefined, 2)}\n`);
-  await writeFile(path.join(projectPath, 'vited.config.ts'), makeVitedConfig(packageJson, theme), {
-    flag: 'wx',
+  await writeFile(configPath, makeVitedConfig(packageJson, theme), {
+    flag: overwriteConfig ? 'w' : 'wx',
   });
   await writeIfMissing(path.join(docsPath, 'README.md'), makeReadme(packageJson));
 
@@ -138,7 +145,7 @@ export async function create({
     await installPackages(projectPath, packageManager);
   }
 
-  return { projectPath, mode };
+  return { projectPath, mode, configPath };
 }
 
 export async function installPackages(
@@ -166,14 +173,18 @@ export async function installPackages(
   });
 }
 
-async function validateTarget(projectPath: string): Promise<ProjectMode> {
+async function validateTarget(projectPath: string): Promise<TargetValidation> {
   let projectStat;
 
   try {
     projectStat = await stat(projectPath);
   } catch (error) {
     if (isNodeError(error, 'ENOENT')) {
-      return 'create';
+      return {
+        mode: 'create',
+        configPath: path.join(projectPath, 'vited.config.ts'),
+        overwriteConfig: false,
+      };
     }
     throw error;
   }
@@ -182,19 +193,13 @@ async function validateTarget(projectPath: string): Promise<ProjectMode> {
     throw new Error(t('errors.projectNotDirectory', { path: projectPath }));
   }
 
-  const configPath = path.join(projectPath, 'vited.config.ts');
-  let configExists = false;
-  try {
-    await stat(configPath);
-    configExists = true;
-  } catch (error) {
-    if (!isNodeError(error, 'ENOENT')) {
-      throw error;
-    }
-  }
-  if (configExists) {
-    throw new Error(t('errors.alreadyConfigured', { path: projectPath }));
-  }
+  const defaultConfigPath = path.join(projectPath, 'vited.config.ts');
+  const hasExistingConfig = await fileExists(defaultConfigPath);
+  const configPath = path.join(
+    projectPath,
+    hasExistingConfig ? 'vited-new.config.ts' : 'vited.config.ts',
+  );
+  const overwriteConfig = hasExistingConfig && (await fileExists(configPath));
 
   const docsPath = path.join(projectPath, 'docs');
   try {
@@ -208,7 +213,7 @@ async function validateTarget(projectPath: string): Promise<ProjectMode> {
     }
   }
 
-  return 'init';
+  return { mode: 'init', configPath, overwriteConfig };
 }
 
 async function readProjectPackageJson(

@@ -37,3 +37,4 @@ The generated project includes `vited.config.ts`, a `docs` directory, and
 `docs:dev` / `docs:build` scripts. `@vited/core` provides the HTML shell, so no
 `index.html` is added to the project. Existing package scripts and documentation
 files are preserved. An existing `vited.config.ts` is not overwritten.
+If it already exists, `vited-new.config.ts` is created or overwritten for comparison.

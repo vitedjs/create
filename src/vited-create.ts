@@ -69,7 +69,7 @@ program
       install: options.install,
     });
 
-    console.log(t('cli.configured', { path: result.projectPath }));
+    console.log(t('cli.configured', { path: result.projectPath, configPath: result.configPath }));
   });
 
 program.helpOption('-h, --help', t('cli.showHelp'));

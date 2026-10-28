@@ -18,8 +18,11 @@ describe('i18n', () => {
     await setLanguage('zh');
 
     expect(t('cli.description')).toBe('在项目目录中配置 Vited 文档');
-    expect(t('cli.configured', { path: '/workspace/docs' })).toBe(
-      '已在 /workspace/docs 配置 Vited 文档',
-    );
+    expect(
+      t('cli.configured', {
+        path: '/workspace/docs',
+        configPath: '/workspace/docs/vited-new.config.ts',
+      }),
+    ).toBe('已在 /workspace/docs 配置 Vited 文档。配置文件：/workspace/docs/vited-new.config.ts');
   });
 });
