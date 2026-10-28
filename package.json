@@ -1,8 +1,12 @@
 {
   "name": "@vited/create",
   "version": "0.0.1",
-  "description": "Vited template initialization",
-  "keywords": [],
+  "description": "Create and initialize Vited documentation projects",
+  "keywords": [
+    "cli",
+    "documentation",
+    "vited"
+  ],
   "homepage": "https://github.com/vitedjs/create#readme",
   "bugs": {
     "url": "https://github.com/vitedjs/create/issues"
@@ -47,7 +51,7 @@
     "watch": "node-scripts watch"
   },
   "dependencies": {
-    "chalk": "^4.1.2",
+    "@clack/prompts": "^1.8.1",
     "commander": "^11.0.0"
   },
   "devDependencies": {

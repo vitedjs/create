@@ -1,48 +1,42 @@
-# create
+# @vited/create
 
-## Install
+Create a new Vited documentation project or add Vited to an existing project.
 
-### Run directly
+## Interactive setup
 
-```bash
-npx create
-```
-
-### Install on system
+Run without arguments to choose the project mode, directory, theme, package
+manager, and whether to install dependencies:
 
 ```bash
-npm i -g create
-%binName%
+pnpm dlx @vited/create
 ```
 
-### Install in project
+## Command-line setup
+
+Create a new project:
 
 ```bash
-npm i -D create
+pnpm dlx @vited/create my-docs
 ```
 
-Add script entry:
-
-```json
-{
-  "scripts": {
-    "%binName%": "%binName%"
-  }
-}
-```
-
-Run:
+Initialize the current directory or another existing project:
 
 ```bash
-npm run %binName%
+pnpm dlx @vited/create . --init
+pnpm dlx @vited/create ../existing-project --init
 ```
 
-## Options
+The default theme is `@vited/theme-mantine`. Select a package manager and skip
+automatic dependency installation with:
 
-### `--help`
+```bash
+pnpm dlx @vited/create my-docs \
+  --theme @vited/theme-mantine \
+  --package-manager pnpm \
+  --no-install
+```
 
-Show help
-
-### `--version`
-
-Show version
+The generated project includes `vited.config.ts`, a `docs` directory, and
+`docs:dev` / `docs:build` scripts. `@vited/core` provides the HTML shell, so no
+`index.html` is added to the project. Existing package scripts and documentation
+files are preserved. An existing `vited.config.ts` is not overwritten.
