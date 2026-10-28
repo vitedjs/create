@@ -3,7 +3,7 @@ import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 
-import { t } from './i18n.js';
+import { t, type Language } from './i18n.js';
 
 export const THEMES = ['@vited/theme-mantine'] as const;
 export type Theme = (typeof THEMES)[number];
@@ -140,7 +140,8 @@ export async function create({
   await writeFile(configPath, makeVitedConfig(packageJson, theme), {
     flag: overwriteConfig ? 'w' : 'wx',
   });
-  await writeIfMissing(path.join(docsPath, 'README.md'), makeReadme(packageJson));
+  await writeIfMissing(path.join(docsPath, 'README.md'), makeReadme(packageJson, 'en'));
+  await writeIfMissing(path.join(docsPath, 'README.zh.md'), makeReadme(packageJson, 'zh'));
 
   if (install) {
     await installPackages(projectPath, packageManager);
@@ -382,12 +383,12 @@ function makeVitedConfig(packageJson: ProjectPackageJson, theme: Theme): string 
   ].join('\n');
 }
 
-function makeReadme(packageJson: ProjectPackageJson): string {
+function makeReadme(packageJson: ProjectPackageJson, language: Language): string {
   const title =
     typeof packageJson['name'] === 'string' && packageJson['name'].length > 0
       ? packageJson['name']
       : 'Vited documentation';
-  return `# ${title}\n\n${t('template.docsWelcome')}\n`;
+  return `# ${title}\n\n${t('template.docsWelcome', { lng: language })}\n`;
 }
 
 async function writeIfMissing(filePath: string, content: string): Promise<void> {

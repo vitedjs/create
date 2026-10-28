@@ -49,6 +49,12 @@ describe('create', () => {
     expect(await readFile(path.join(projectPath, 'docs/README.md'), 'utf8')).toContain(
       '# new-site',
     );
+    expect(await readFile(path.join(projectPath, 'docs/README.md'), 'utf8')).toContain(
+      'Welcome to your Vited documentation site.',
+    );
+    expect(await readFile(path.join(projectPath, 'docs/README.zh.md'), 'utf8')).toContain(
+      '欢迎使用 Vited 文档站点。',
+    );
     expect(existsSync(path.join(projectPath, 'index.html'))).toBe(false);
   });
 
@@ -95,6 +101,20 @@ describe('create', () => {
     expect(result.mode).toBe('init');
     expect(await readFile(path.join(projectPath, 'notes.txt'), 'utf8')).toBe('keep');
     await readFile(path.join(projectPath, 'vited.config.ts'), 'utf8');
+  });
+
+  it('keeps the default documentation English when Chinese CLI messages are selected', async () => {
+    const projectPath = path.join(temporaryDirectory, 'chinese-locale-site');
+    await setLanguage('zh');
+
+    await create({ ...createOptions, directory: projectPath });
+
+    expect(await readFile(path.join(projectPath, 'docs/README.md'), 'utf8')).toContain(
+      'Welcome to your Vited documentation site.',
+    );
+    expect(await readFile(path.join(projectPath, 'docs/README.zh.md'), 'utf8')).toContain(
+      '欢迎使用 Vited 文档站点。',
+    );
   });
 
   it('upgrades existing React devDependencies to React 19', async () => {
