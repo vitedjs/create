@@ -33,12 +33,13 @@ interface TargetValidation {
   overwriteConfig: boolean;
 }
 
+const defaultReactVersion = '^19.3.1';
+const reactPackages = ['react', 'react-dom'] as const;
+
 const vitedPackages: Record<string, string> = {
   '@vited/cli': '^0.1.0',
   '@vited/core': '^0.1.0',
-  '@vited/theme-mantine': '^0.1.0',
-  react: '^19.3.1',
-  'react-dom': '^19.3.1',
+  '@vited/theme-mantine': '^0.2.0',
   vite: '^8.3.5',
 };
 
@@ -281,6 +282,7 @@ function addVitedConfiguration(packageJson: ProjectPackageJson, projectPath: str
 
   const dependencies = getRecord(packageJson['dependencies'], 'dependencies');
   const devDependencies = getRecord(packageJson['devDependencies'], 'devDependencies');
+
   for (const [name, version] of Object.entries(vitedPackages)) {
     if (name === '@vited/theme-mantine' && theme !== name) {
       continue;
@@ -289,6 +291,16 @@ function addVitedConfiguration(packageJson: ProjectPackageJson, projectPath: str
       devDependencies[name] = version;
     }
   }
+
+  const reactTarget = reactPackages.some((name) => dependencies[name] !== undefined)
+    ? dependencies
+    : devDependencies;
+  const reactOther = reactTarget === dependencies ? devDependencies : dependencies;
+  for (const name of reactPackages) {
+    reactTarget[name] = defaultReactVersion;
+    delete reactOther[name];
+  }
+
   packageJson['devDependencies'] = devDependencies;
 }
 

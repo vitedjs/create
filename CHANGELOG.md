@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.4 - 2026-10-28
+
+### Fixed
+
+- Upgrade existing React and React DOM dependencies to React 19 when initializing a Vited project.
+
 ## 0.0.3 - 2026-10-28
 
 ### Fixed

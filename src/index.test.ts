@@ -41,7 +41,7 @@ describe('create', () => {
     expect(packageJson.devDependencies).toMatchObject({
       '@vited/cli': '^0.1.0',
       '@vited/core': '^0.1.0',
-      '@vited/theme-mantine': '^0.1.0',
+      '@vited/theme-mantine': '^0.2.0',
     });
     expect(await readFile(path.join(projectPath, 'vited.config.ts'), 'utf8')).toContain(
       'theme: "@vited/theme-mantine"',
@@ -61,6 +61,7 @@ describe('create', () => {
         name: 'existing-site',
         scripts: { test: 'vitest run', 'docs:dev': 'custom dev' },
         dependencies: { react: '^19.0.0' },
+        devDependencies: { 'react-dom': '^18.3.1' },
       }),
     );
     await writeFile(path.join(projectPath, 'docs/README.md'), '# Existing docs\n');
@@ -74,8 +75,10 @@ describe('create', () => {
       'docs:dev': 'custom dev',
       'docs:build': 'vited build',
     });
-    expect(packageJson.dependencies.react).toBe('^19.0.0');
+    expect(packageJson.dependencies.react).toBe('^19.3.1');
+    expect(packageJson.dependencies['react-dom']).toBe('^19.3.1');
     expect(packageJson.devDependencies['@vited/core']).toBe('^0.1.0');
+    expect(packageJson.devDependencies['react-dom']).toBeUndefined();
     expect(await readFile(path.join(projectPath, 'docs/README.md'), 'utf8')).toBe(
       '# Existing docs\n',
     );
@@ -92,6 +95,24 @@ describe('create', () => {
     expect(result.mode).toBe('init');
     expect(await readFile(path.join(projectPath, 'notes.txt'), 'utf8')).toBe('keep');
     await readFile(path.join(projectPath, 'vited.config.ts'), 'utf8');
+  });
+
+  it('upgrades existing React devDependencies to React 19', async () => {
+    const projectPath = path.join(temporaryDirectory, 'react-18-site');
+    await mkdir(projectPath);
+    await writeFile(
+      path.join(projectPath, 'package.json'),
+      JSON.stringify({
+        name: 'react-18-site',
+        devDependencies: { react: '^18.3.1', 'react-dom': '^18.3.1' },
+      }),
+    );
+
+    await create({ ...createOptions, directory: projectPath });
+
+    const packageJson = JSON.parse(await readFile(path.join(projectPath, 'package.json'), 'utf8'));
+    expect(packageJson.devDependencies.react).toBe('^19.3.1');
+    expect(packageJson.devDependencies['react-dom']).toBe('^19.3.1');
   });
 
   it('writes a comparison config when a Vited config already exists', async () => {
