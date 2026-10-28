@@ -152,8 +152,28 @@ export async function installPackages(
   projectPath: string,
   packageManager: PackageManager,
 ): Promise<void> {
+  if (packageManager === 'pnpm') {
+    await runPackageCommand('pnpm', ['approve-builds', '@swc/core', 'esbuild'], projectPath);
+  }
+  await runPackageCommand(packageManager, ['install'], projectPath);
+}
+
+async function runPackageCommand(
+  packageManager: PackageManager,
+  args: string[],
+  projectPath: string,
+): Promise<void> {
+  const command = [packageManager, ...args].join(' ');
+  const createCommandError = (code: number | null) =>
+    new Error(
+      t('errors.commandFailed', {
+        command,
+        code: code === null ? 'unknown' : code,
+      }),
+    );
+
   await new Promise<void>((resolve, reject) => {
-    const child = spawn(packageManager, ['install'], {
+    const child = spawn(packageManager, args, {
       cwd: projectPath,
       stdio: 'inherit',
     });
@@ -163,11 +183,7 @@ export async function installPackages(
       if (code === 0) {
         resolve();
       } else {
-        reject(
-          new Error(
-            t('errors.installFailed', { packageManager, code: code === null ? 'unknown' : code }),
-          ),
-        );
+        reject(createCommandError(code));
       }
     });
   });

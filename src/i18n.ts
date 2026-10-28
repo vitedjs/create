@@ -37,7 +37,7 @@ const resources = {
         unsupportedPackageManager: 'Unsupported package manager in {{path}}: {{packageManager}}',
         multipleLockfiles:
           'Multiple package manager lockfiles found in {{path}}. Set packageManager in package.json.',
-        installFailed: '{{packageManager}} install exited with code {{code}}',
+        commandFailed: '{{command}} exited with code {{code}}',
         projectNotDirectory: 'Project path is not a directory: {{path}}',
         docsNotDirectory: 'Cannot create documentation: {{path}} is not a directory.',
         invalidPackageJson: 'Invalid package.json: expected a JSON object in {{path}}',
@@ -78,7 +78,7 @@ const resources = {
         unsupportedPackageManager: '{{path}} 中配置了不支持的包管理器：{{packageManager}}',
         multipleLockfiles:
           '{{path}} 中存在多个包管理器锁文件，请在 package.json 中设置 packageManager。',
-        installFailed: '{{packageManager}} install 退出，代码为 {{code}}',
+        commandFailed: '{{command}} 退出，代码为 {{code}}',
         projectNotDirectory: '项目路径不是目录：{{path}}',
         docsNotDirectory: '无法创建文档：{{path}} 不是目录。',
         invalidPackageJson: 'package.json 无效：{{path}} 应为 JSON 对象',

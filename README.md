@@ -38,3 +38,5 @@ The generated project includes `vited.config.ts`, a `docs` directory, and
 `index.html` is added to the project. Existing package scripts and documentation
 files are preserved. An existing `vited.config.ts` is not overwritten.
 If it already exists, `vited-new.config.ts` is created or overwritten for comparison.
+When installing with pnpm, the required `@swc/core` and `esbuild` build scripts
+are approved automatically to comply with pnpm's build-script policy.

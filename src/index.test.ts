@@ -6,7 +6,7 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { setLanguage } from './i18n.js';
-import { create, resolvePackageManager } from './index.js';
+import { create, installPackages, resolvePackageManager } from './index.js';
 
 const createOptions = {
   theme: '@vited/theme-mantine' as const,
@@ -154,5 +154,23 @@ describe('resolvePackageManager', () => {
     await writeFile(path.join(temporaryDirectory, 'yarn.lock'), '');
 
     await expect(resolvePackageManager(temporaryDirectory, {})).resolves.toBe('yarn');
+  });
+});
+
+describe('installPackages', () => {
+  it('approves required pnpm build scripts before installing dependencies', async () => {
+    await writeFile(
+      path.join(temporaryDirectory, 'package.json'),
+      JSON.stringify({ name: 'pnpm-build-policy-test' }),
+    );
+
+    await installPackages(temporaryDirectory, 'pnpm');
+
+    const workspaceConfig = await readFile(
+      path.join(temporaryDirectory, 'pnpm-workspace.yaml'),
+      'utf8',
+    );
+    expect(workspaceConfig).toContain("'@swc/core': true");
+    expect(workspaceConfig).toContain('esbuild: true');
   });
 });
