@@ -196,7 +196,7 @@ function makeGitHubPagesWorkflow(packageManager: PackageManager): string {
     `      - run: ${buildCommand}`,
     '      - uses: actions/upload-pages-artifact@v4',
     '        with:',
-    '          path: ./dist',
+    '          path: ./docs_dist',
     '',
     '  deploy:',
     '    environment:',

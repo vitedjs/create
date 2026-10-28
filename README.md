@@ -36,7 +36,8 @@ pnpm dlx @vited/create my-docs \
 The generated project includes `vited.config.ts`, a `docs` directory with a
 default `favicon.svg`, and `docs:dev` / `docs:build` scripts. `@vited/core`
 provides the HTML shell, so no `index.html` is added to the project. Existing
-package scripts and documentation files are preserved. The starter
+package scripts and documentation files are preserved. The generated
+`.gitignore` ignores the default `docs_dist` build output. The starter
 documentation is English in `docs/README.md` with a Chinese translation in
 `docs/README.zh.md`. An existing `vited.config.ts` is not overwritten.
 If it already exists, `vited-new.config.ts` is created or overwritten for comparison.
@@ -45,6 +46,7 @@ are approved automatically to comply with pnpm's build-script policy.
 
 When a GitHub repository is detected from the `origin` remote or the
 `repository` field in `package.json`, create adds a GitHub Pages workflow and
-sets the Vite and Vited base URLs to the repository path. User and organization
-sites named `<owner>.github.io` use the root URL. In the repository settings,
+sets the Vite and Vited base URLs to the repository path. The workflow deploys
+the `docs_dist` build output. User and organization sites named
+`<owner>.github.io` use the root URL. In the repository settings,
 select **Settings → Pages → Source → GitHub Actions** to enable the workflow.

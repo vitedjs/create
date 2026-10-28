@@ -143,6 +143,7 @@ export async function create({
   const base = githubPages?.base;
 
   await mkdir(projectPath, { recursive: true });
+  await ensureGitignoreEntry(projectPath, 'docs_dist');
   const docsPath = path.join(projectPath, 'docs');
   await mkdir(docsPath, { recursive: true });
   await writeFile(packageJsonPath, `${JSON.stringify(packageJson, undefined, 2)}\n`);
@@ -417,4 +418,25 @@ async function writeIfMissing(filePath: string, content: string): Promise<void> 
       throw error;
     }
   }
+}
+
+async function ensureGitignoreEntry(projectPath: string, entry: string): Promise<void> {
+  const gitignorePath = path.join(projectPath, '.gitignore');
+  let contents: string;
+  try {
+    contents = await readFile(gitignorePath, 'utf8');
+  } catch (error) {
+    if (!isNodeError(error, 'ENOENT')) throw error;
+    contents = '';
+  }
+
+  const alreadyIgnored = contents.split(/\r?\n/).some((line) => {
+    const pattern = line.trim().replaceAll(/^\/+|\/+$/g, '');
+    return pattern === entry;
+  });
+  if (alreadyIgnored) return;
+
+  const lineEnding = contents.includes('\r\n') ? '\r\n' : '\n';
+  const separator = contents.length > 0 && !contents.endsWith('\n') ? lineEnding : '';
+  await writeFile(gitignorePath, `${contents}${separator}${entry}${lineEnding}`);
 }

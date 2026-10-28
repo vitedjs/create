@@ -58,6 +58,7 @@ describe('create', () => {
     expect(await readFile(path.join(projectPath, 'docs/README.zh.md'), 'utf8')).toContain(
       '欢迎使用 Vited 文档站点。',
     );
+    expect(await readFile(path.join(projectPath, '.gitignore'), 'utf8')).toBe('docs_dist\n');
     expect(existsSync(path.join(projectPath, '.github/workflows/pages.yaml'))).toBe(false);
     expect(existsSync(path.join(projectPath, 'index.html'))).toBe(false);
   });
@@ -74,6 +75,7 @@ describe('create', () => {
         devDependencies: { 'react-dom': '^18.3.1' },
       }),
     );
+    await writeFile(path.join(projectPath, '.gitignore'), 'node_modules\n');
     await writeFile(path.join(projectPath, 'docs/README.md'), '# Existing docs\n');
     await writeFile(path.join(projectPath, 'docs/favicon.svg'), '<svg>custom favicon</svg>');
 
@@ -95,6 +97,9 @@ describe('create', () => {
     );
     expect(await readFile(path.join(projectPath, 'docs/favicon.svg'), 'utf8')).toBe(
       '<svg>custom favicon</svg>',
+    );
+    expect(await readFile(path.join(projectPath, '.gitignore'), 'utf8')).toBe(
+      'node_modules\ndocs_dist\n',
     );
     expect(existsSync(path.join(projectPath, 'index.html'))).toBe(false);
   });

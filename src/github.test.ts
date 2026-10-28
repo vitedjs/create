@@ -52,6 +52,7 @@ describe('GitHub Pages setup', () => {
     expect(workflow).toContain('pnpm approve-builds @swc/core esbuild');
     expect(workflow).toContain('pnpm run docs:build');
     expect(workflow).toContain('actions/upload-pages-artifact@v4');
+    expect(workflow).toContain('path: ./docs_dist');
     expect(workflow).toContain('actions/deploy-pages@v4');
   });
 
