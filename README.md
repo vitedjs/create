@@ -41,3 +41,9 @@ with a Chinese translation in `docs/README.zh.md`. An existing `vited.config.ts`
 If it already exists, `vited-new.config.ts` is created or overwritten for comparison.
 When installing with pnpm, the required `@swc/core` and `esbuild` build scripts
 are approved automatically to comply with pnpm's build-script policy.
+
+When a GitHub repository is detected from the `origin` remote or the
+`repository` field in `package.json`, create adds a GitHub Pages workflow and
+sets the Vite and Vited base URLs to the repository path. User and organization
+sites named `<owner>.github.io` use the root URL. In the repository settings,
+select **Settings → Pages → Source → GitHub Actions** to enable the workflow.

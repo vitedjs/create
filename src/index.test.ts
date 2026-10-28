@@ -43,9 +43,9 @@ describe('create', () => {
       '@vited/core': '^0.1.0',
       '@vited/theme-mantine': '^0.2.0',
     });
-    expect(await readFile(path.join(projectPath, 'vited.config.ts'), 'utf8')).toContain(
-      'theme: "@vited/theme-mantine"',
-    );
+    const config = await readFile(path.join(projectPath, 'vited.config.ts'), 'utf8');
+    expect(config).toContain('base: "/"');
+    expect(config).toContain('theme: "@vited/theme-mantine"');
     expect(await readFile(path.join(projectPath, 'docs/README.md'), 'utf8')).toContain(
       '# new-site',
     );
@@ -55,6 +55,7 @@ describe('create', () => {
     expect(await readFile(path.join(projectPath, 'docs/README.zh.md'), 'utf8')).toContain(
       '欢迎使用 Vited 文档站点。',
     );
+    expect(existsSync(path.join(projectPath, '.github/workflows/pages.yaml'))).toBe(false);
     expect(existsSync(path.join(projectPath, 'index.html'))).toBe(false);
   });
 

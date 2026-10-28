@@ -3,11 +3,13 @@ import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 
+import { getGitHubPagesSetup, writeGitHubPagesWorkflow, type PackageManager } from './github.js';
 import { t, type Language } from './i18n.js';
+
+export type { PackageManager } from './github.js';
 
 export const THEMES = ['@vited/theme-mantine'] as const;
 export type Theme = (typeof THEMES)[number];
-export type PackageManager = 'npm' | 'pnpm' | 'yarn' | 'bun';
 export type ProjectMode = 'create' | 'init';
 
 export interface CreateOptions {
@@ -132,16 +134,26 @@ export async function create({
   const packageJsonPath = path.join(projectPath, 'package.json');
   const packageJson = await readProjectPackageJson(packageJsonPath, projectPath);
   addVitedConfiguration(packageJson, projectPath, theme);
+  const githubPages = await getGitHubPagesSetup(
+    projectPath,
+    packageJson['repository'],
+    packageManager,
+  );
+  const base = githubPages?.base;
 
   await mkdir(projectPath, { recursive: true });
   const docsPath = path.join(projectPath, 'docs');
   await mkdir(docsPath, { recursive: true });
   await writeFile(packageJsonPath, `${JSON.stringify(packageJson, undefined, 2)}\n`);
-  await writeFile(configPath, makeVitedConfig(packageJson, theme), {
+  await writeFile(configPath, makeVitedConfig(packageJson, theme, base), {
     flag: overwriteConfig ? 'w' : 'wx',
   });
   await writeIfMissing(path.join(docsPath, 'README.md'), makeReadme(packageJson, 'en'));
   await writeIfMissing(path.join(docsPath, 'README.zh.md'), makeReadme(packageJson, 'zh'));
+
+  if (githubPages) {
+    await writeGitHubPagesWorkflow(projectPath, githubPages.workflow);
+  }
 
   if (install) {
     await installPackages(projectPath, packageManager);
@@ -364,7 +376,7 @@ function toPackageName(value: string): string {
   return name || 'vited-docs';
 }
 
-function makeVitedConfig(packageJson: ProjectPackageJson, theme: Theme): string {
+function makeVitedConfig(packageJson: ProjectPackageJson, theme: Theme, base?: string): string {
   const title =
     typeof packageJson['name'] === 'string' && packageJson['name'].length > 0
       ? packageJson['name']
@@ -374,6 +386,7 @@ function makeVitedConfig(packageJson: ProjectPackageJson, theme: Theme): string 
     "import { defineConfig } from '@vited/core';",
     '',
     'export default defineConfig({',
+    `  base: ${JSON.stringify(base ?? '/')},`,
     '  docs: {',
     `    title: ${JSON.stringify(title)},`,
     `    theme: ${JSON.stringify(theme)},`,
