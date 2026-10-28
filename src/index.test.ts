@@ -52,6 +52,9 @@ describe('create', () => {
     expect(await readFile(path.join(projectPath, 'docs/README.md'), 'utf8')).toContain(
       'Welcome to your Vited documentation site.',
     );
+    expect(await readFile(path.join(projectPath, 'docs/favicon.svg'), 'utf8')).toContain(
+      '<svg xmlns="http://www.w3.org/2000/svg"',
+    );
     expect(await readFile(path.join(projectPath, 'docs/README.zh.md'), 'utf8')).toContain(
       '欢迎使用 Vited 文档站点。',
     );
@@ -72,6 +75,7 @@ describe('create', () => {
       }),
     );
     await writeFile(path.join(projectPath, 'docs/README.md'), '# Existing docs\n');
+    await writeFile(path.join(projectPath, 'docs/favicon.svg'), '<svg>custom favicon</svg>');
 
     const result = await create({ ...createOptions, directory: projectPath });
 
@@ -88,6 +92,9 @@ describe('create', () => {
     expect(packageJson.devDependencies['react-dom']).toBeUndefined();
     expect(await readFile(path.join(projectPath, 'docs/README.md'), 'utf8')).toBe(
       '# Existing docs\n',
+    );
+    expect(await readFile(path.join(projectPath, 'docs/favicon.svg'), 'utf8')).toBe(
+      '<svg>custom favicon</svg>',
     );
     expect(existsSync(path.join(projectPath, 'index.html'))).toBe(false);
   });

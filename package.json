@@ -27,6 +27,7 @@
   },
   "files": [
     "dist",
+    "favicon.svg",
     "CHANGELOG.md",
     "LICENSE",
     "README.md"

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="bolt" x1="30" y1="14" x2="95" y2="107" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ffe76b" />
+      <stop offset=".38" stop-color="#ff9a43" />
+      <stop offset=".72" stop-color="#d94fe8" />
+      <stop offset="1" stop-color="#6657f5" />
+    </linearGradient>
+    <clipPath id="shape">
+      <path d="M75 8 29 62h27l-9 58 53-70H73L94 8H75Z" />
+    </clipPath>
+  </defs>
+  <path d="M75 8 29 62h27l-9 58 53-70H73L94 8H75Z" fill="url(#bolt)" />
+  <g clip-path="url(#shape)">
+    <path d="M22 18h61L56 62H22Z" fill="#fff1a1" opacity=".58" />
+    <path d="m56 62 17-14h28l-53 72 9-58Z" fill="#654ce1" opacity=".5" />
+    <path d="m73 8 21 0-21 42H55Z" fill="#fff" opacity=".18" />
+    <path d="m56 62 17-14-26 72 9-58Z" fill="#ff6b5b" opacity=".45" />
+  </g>
+</svg>

@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Generate `docs/favicon.svg` for new projects without overwriting an existing favicon.
+
 ## 0.0.4 - 2026-10-28
 
 ### Fixed

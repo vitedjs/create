@@ -2,6 +2,7 @@ import { spawn } from 'node:child_process';
 import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
+import { URL } from 'node:url';
 
 import { getGitHubPagesSetup, writeGitHubPagesWorkflow, type PackageManager } from './github.js';
 import { t, type Language } from './i18n.js';
@@ -148,6 +149,10 @@ export async function create({
   await writeFile(configPath, makeVitedConfig(packageJson, theme, base), {
     flag: overwriteConfig ? 'w' : 'wx',
   });
+  await writeIfMissing(
+    path.join(docsPath, 'favicon.svg'),
+    await readFile(new URL('../favicon.svg', import.meta.url), 'utf8'),
+  );
   await writeIfMissing(path.join(docsPath, 'README.md'), makeReadme(packageJson, 'en'));
   await writeIfMissing(path.join(docsPath, 'README.zh.md'), makeReadme(packageJson, 'zh'));
 

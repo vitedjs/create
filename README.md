@@ -33,11 +33,12 @@ pnpm dlx @vited/create my-docs \
   --no-install
 ```
 
-The generated project includes `vited.config.ts`, a `docs` directory, and
-`docs:dev` / `docs:build` scripts. `@vited/core` provides the HTML shell, so no
-`index.html` is added to the project. Existing package scripts and documentation
-files are preserved. The starter documentation is English in `docs/README.md`
-with a Chinese translation in `docs/README.zh.md`. An existing `vited.config.ts` is not overwritten.
+The generated project includes `vited.config.ts`, a `docs` directory with a
+default `favicon.svg`, and `docs:dev` / `docs:build` scripts. `@vited/core`
+provides the HTML shell, so no `index.html` is added to the project. Existing
+package scripts and documentation files are preserved. The starter
+documentation is English in `docs/README.md` with a Chinese translation in
+`docs/README.zh.md`. An existing `vited.config.ts` is not overwritten.
 If it already exists, `vited-new.config.ts` is created or overwritten for comparison.
 When installing with pnpm, the required `@swc/core` and `esbuild` build scripts
 are approved automatically to comply with pnpm's build-script policy.
