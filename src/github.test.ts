@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { parse } from 'yaml';
 
 import { create } from './index.js';
 
@@ -46,6 +47,17 @@ describe('GitHub Pages setup', () => {
 
     const workflow = await readFile(path.join(projectPath, '.github/workflows/pages.yaml'), 'utf8');
     expect(workflow).toContain('pnpm/action-setup@v4');
+    expect(workflow).toContain('version: 12');
+    expect(parse(workflow)).toMatchObject({
+      on: {
+        push: { branches: ['main', 'master'] },
+      },
+      jobs: {
+        build: {
+          steps: expect.arrayContaining([{ uses: 'pnpm/action-setup@v4', with: { version: 12 } }]),
+        },
+      },
+    });
     expect(workflow).toContain('actions/configure-pages@v5');
     expect(workflow).toContain('pages: write');
     expect(workflow).toContain('id-token: write');
@@ -54,6 +66,58 @@ describe('GitHub Pages setup', () => {
     expect(workflow).toContain('actions/upload-pages-artifact@v4');
     expect(workflow).toContain('path: ./docs_dist');
     expect(workflow).toContain('actions/deploy-pages@v4');
+  });
+
+  it('reads the pnpm version from the project package.json', async () => {
+    const projectPath = path.join(temporaryDirectory, 'github-pnpm-version');
+    await mkdir(projectPath);
+    await writeFile(
+      path.join(projectPath, 'package.json'),
+      JSON.stringify({
+        name: 'github-pnpm-version',
+        packageManager: 'pnpm@12.15.0',
+        repository: 'acme/github-pnpm-version',
+      }),
+    );
+
+    await create({ ...createOptions, directory: projectPath });
+
+    const workflow = await readFile(path.join(projectPath, '.github/workflows/pages.yaml'), 'utf8');
+    expect(parse(workflow)).toMatchObject({
+      jobs: {
+        build: {
+          steps: expect.arrayContaining([
+            { uses: 'pnpm/action-setup@v4', with: { version: '12.15.0' } },
+          ]),
+        },
+      },
+    });
+  });
+
+  it('falls back to the declared devEngines pnpm version', async () => {
+    const projectPath = path.join(temporaryDirectory, 'github-dev-engines');
+    await mkdir(projectPath);
+    await writeFile(
+      path.join(projectPath, 'package.json'),
+      JSON.stringify({
+        name: 'github-dev-engines',
+        devEngines: { packageManager: { name: 'pnpm', version: '>=12.15.0' } },
+        repository: 'acme/github-dev-engines',
+      }),
+    );
+
+    await create({ ...createOptions, directory: projectPath });
+
+    const workflow = await readFile(path.join(projectPath, '.github/workflows/pages.yaml'), 'utf8');
+    expect(parse(workflow)).toMatchObject({
+      jobs: {
+        build: {
+          steps: expect.arrayContaining([
+            { uses: 'pnpm/action-setup@v4', with: { version: '12.15.0' } },
+          ]),
+        },
+      },
+    });
   });
 
   it('detects the origin remote and uses a root base for user sites', async () => {

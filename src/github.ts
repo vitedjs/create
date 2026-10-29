@@ -4,6 +4,8 @@ import path from 'node:path';
 import { URL } from 'node:url';
 import { promisify } from 'node:util';
 
+import { stringify } from 'yaml';
+
 export type PackageManager = 'npm' | 'pnpm' | 'yarn' | 'bun';
 
 export interface GitHubPagesSetup {
@@ -16,21 +18,30 @@ interface GitHubRepository {
   name: string;
 }
 
+interface GitHubWorkflowStep {
+  id?: string;
+  run?: string;
+  uses?: string;
+  with?: Record<string, string | number>;
+}
+
+const defaultPnpmVersion = 12;
+
 const execFileAsync = promisify(execFile);
 
 export async function getGitHubPagesSetup(
   projectPath: string,
-  repository: unknown,
+  packageJson: unknown,
   packageManager: PackageManager,
 ): Promise<GitHubPagesSetup | undefined> {
-  const githubRepository = await findGitHubRepository(projectPath, repository);
+  const githubRepository = await findGitHubRepository(projectPath, getRepositoryURL(packageJson));
   if (!githubRepository) {
     return;
   }
 
   return {
     base: getGitHubBaseURL(githubRepository),
-    workflow: makeGitHubPagesWorkflow(packageManager),
+    workflow: makeGitHubPagesWorkflow(packageManager, getPnpmVersion(packageJson)),
   };
 }
 
@@ -52,7 +63,7 @@ export async function writeGitHubPagesWorkflow(
 
 async function findGitHubRepository(
   projectPath: string,
-  repository: unknown,
+  repositoryURL: string | undefined,
 ): Promise<GitHubRepository | undefined> {
   let originURL: string | undefined;
   try {
@@ -67,7 +78,7 @@ async function findGitHubRepository(
     }
   }
 
-  return parseGitHubRepository(originURL) ?? parseGitHubRepository(getRepositoryURL(repository));
+  return parseGitHubRepository(originURL) ?? parseGitHubRepository(repositoryURL);
 }
 
 function isExpectedGitLookupFailure(error: unknown): boolean {
@@ -81,7 +92,14 @@ function isExpectedGitLookupFailure(error: unknown): boolean {
   return typeof code === 'number' && [2, 128].includes(code);
 }
 
-function getRepositoryURL(repository: unknown): string | undefined {
+function getRepositoryURL(packageJson: unknown): string | undefined {
+  if (!isRecord(packageJson)) {
+    return;
+  }
+  return getURLValue(packageJson['repository']);
+}
+
+function getURLValue(repository: unknown): string | undefined {
   if (typeof repository === 'string') {
     return repository;
   }
@@ -144,19 +162,66 @@ function getGitHubBaseURL(repository: GitHubRepository): string {
     : `/${repository.name}/`;
 }
 
-function makeGitHubPagesWorkflow(packageManager: PackageManager): string {
-  const setupPackageManagerSteps = {
+function getPnpmVersion(packageJson: unknown): string | number {
+  if (!isRecord(packageJson)) {
+    return defaultPnpmVersion;
+  }
+
+  const packageManager = packageJson['packageManager'];
+  if (typeof packageManager === 'string' && /^pnpm[@/]/.test(packageManager)) {
+    const version = parseVersion(packageManager);
+    if (version) {
+      return version;
+    }
+  }
+
+  const devEngines = packageJson['devEngines'];
+  if (isRecord(devEngines)) {
+    const devEngine = devEngines['packageManager'];
+    if (isRecord(devEngine) && devEngine['name'] === 'pnpm') {
+      const version = parseVersion(devEngine['version']);
+      if (version) {
+        return version;
+      }
+    }
+  }
+
+  const engines = packageJson['engines'];
+  if (isRecord(engines)) {
+    const version = parseVersion(engines['pnpm']);
+    if (version) {
+      return version;
+    }
+  }
+
+  return defaultPnpmVersion;
+}
+
+function parseVersion(value: unknown): string | undefined {
+  if (typeof value !== 'string') {
+    return;
+  }
+  return /\d+(?:\.\d+){0,2}/.exec(value)?.[0];
+}
+
+function makeGitHubPagesWorkflow(
+  packageManager: PackageManager,
+  pnpmVersion: string | number,
+): string {
+  const setupPackageManagerStepsByPackageManager: Record<PackageManager, GitHubWorkflowStep[]> = {
     npm: [],
-    pnpm: ['      - uses: pnpm/action-setup@v4'],
-    yarn: ['      - run: corepack enable'],
-    bun: ['      - uses: oven-sh/setup-bun@v2'],
-  }[packageManager];
-  const installSteps = {
-    npm: ['      - run: npm install'],
-    pnpm: ['      - run: pnpm approve-builds @swc/core esbuild', '      - run: pnpm install'],
-    yarn: ['      - run: yarn install'],
-    bun: ['      - run: bun install'],
-  }[packageManager];
+    pnpm: [{ uses: 'pnpm/action-setup@v4', with: { version: pnpmVersion } }],
+    yarn: [{ run: 'corepack enable' }],
+    bun: [{ uses: 'oven-sh/setup-bun@v2' }],
+  };
+  const installStepsByPackageManager: Record<PackageManager, GitHubWorkflowStep[]> = {
+    npm: [{ run: 'npm install' }],
+    pnpm: [{ run: 'pnpm approve-builds @swc/core esbuild' }, { run: 'pnpm install' }],
+    yarn: [{ run: 'yarn install' }],
+    bun: [{ run: 'bun install' }],
+  };
+  const setupPackageManagerSteps = setupPackageManagerStepsByPackageManager[packageManager];
+  const installSteps = installStepsByPackageManager[packageManager];
   const buildCommand = {
     npm: 'npm run docs:build',
     pnpm: 'pnpm run docs:build',
@@ -164,54 +229,50 @@ function makeGitHubPagesWorkflow(packageManager: PackageManager): string {
     bun: 'bun run docs:build',
   }[packageManager];
 
-  return [
-    'name: Deploy docs to GitHub Pages',
-    '',
-    'on:',
-    '  push:',
-    '    branches:',
-    '      - main',
-    '      - master',
-    '  workflow_dispatch:',
-    '',
-    'permissions:',
-    '  contents: read',
-    '  pages: write',
-    '',
-    'concurrency:',
-    '  group: github-pages',
-    '  cancel-in-progress: false',
-    '',
-    'jobs:',
-    '  build:',
-    '    runs-on: ubuntu-latest',
-    '    steps:',
-    '      - uses: actions/checkout@v6',
-    '      - uses: actions/setup-node@v6',
-    '        with:',
-    '          node-version: 22',
-    ...setupPackageManagerSteps,
-    '      - uses: actions/configure-pages@v5',
-    ...installSteps,
-    `      - run: ${buildCommand}`,
-    '      - uses: actions/upload-pages-artifact@v4',
-    '        with:',
-    '          path: ./docs_dist',
-    '',
-    '  deploy:',
-    '    environment:',
-    '      name: github-pages',
-    '      url: ${{ steps.deployment.outputs.page_url }}',
-    '    runs-on: ubuntu-latest',
-    '    needs: build',
-    '    permissions:',
-    '      pages: write',
-    '      id-token: write',
-    '    steps:',
-    '      - id: deployment',
-    '        uses: actions/deploy-pages@v4',
-    '',
-  ].join('\n');
+  return stringify({
+    name: 'Pages',
+    on: {
+      push: {
+        branches: ['main', 'master'],
+      },
+      workflow_dispatch: {},
+    },
+    permissions: {
+      contents: 'read',
+      pages: 'write',
+    },
+    concurrency: {
+      group: 'github-pages',
+      'cancel-in-progress': false,
+    },
+    jobs: {
+      build: {
+        'runs-on': 'ubuntu-latest',
+        steps: [
+          { uses: 'actions/checkout@v6' },
+          { uses: 'actions/setup-node@v6', with: { 'node-version': 22 } },
+          ...setupPackageManagerSteps,
+          { uses: 'actions/configure-pages@v5' },
+          ...installSteps,
+          { run: buildCommand },
+          { uses: 'actions/upload-pages-artifact@v4', with: { path: './docs_dist' } },
+        ],
+      },
+      deploy: {
+        environment: {
+          name: 'github-pages',
+          url: '${{ steps.deployment.outputs.page_url }}',
+        },
+        'runs-on': 'ubuntu-latest',
+        needs: 'build',
+        permissions: {
+          pages: 'write',
+          'id-token': 'write',
+        },
+        steps: [{ id: 'deployment', uses: 'actions/deploy-pages@v4' }],
+      },
+    },
+  });
 }
 
 function isNodeError(error: unknown, code: string): error is NodeJS.ErrnoException {

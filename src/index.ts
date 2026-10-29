@@ -135,11 +135,7 @@ export async function create({
   const packageJsonPath = path.join(projectPath, 'package.json');
   const packageJson = await readProjectPackageJson(packageJsonPath, projectPath);
   addVitedConfiguration(packageJson, projectPath, theme);
-  const githubPages = await getGitHubPagesSetup(
-    projectPath,
-    packageJson['repository'],
-    packageManager,
-  );
+  const githubPages = await getGitHubPagesSetup(projectPath, packageJson, packageManager);
   const base = githubPages?.base;
 
   await mkdir(projectPath, { recursive: true });
