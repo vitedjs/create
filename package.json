@@ -1,6 +1,6 @@
 {
   "name": "@vited/create",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Create and initialize Vited documentation projects",
   "keywords": [
     "cli",
