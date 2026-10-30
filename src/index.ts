@@ -40,9 +40,9 @@ const defaultReactVersion = '^19.3.1';
 const reactPackages = ['react', 'react-dom'] as const;
 
 const vitedPackages: Record<string, string> = {
-  '@vited/cli': '^0.1.2',
-  '@vited/core': '^0.2.0',
-  '@vited/theme-mantine': '^0.3.0',
+  '@vited/cli': '^0.1.4',
+  '@vited/core': '^0.4.0',
+  '@vited/theme-mantine': '^0.5.0',
   vite: '^8.3.5',
 };
 
