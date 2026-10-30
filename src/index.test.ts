@@ -39,9 +39,9 @@ describe('create', () => {
       'docs:build': 'vited build',
     });
     expect(packageJson.devDependencies).toMatchObject({
-      '@vited/cli': '^0.1.0',
-      '@vited/core': '^0.1.0',
-      '@vited/theme-mantine': '^0.2.0',
+      '@vited/cli': '^0.1.2',
+      '@vited/core': '^0.2.0',
+      '@vited/theme-mantine': '^0.3.0',
     });
     const config = await readFile(path.join(projectPath, 'vited.config.ts'), 'utf8');
     expect(config).toContain('base: "/"');
@@ -90,7 +90,7 @@ describe('create', () => {
     });
     expect(packageJson.dependencies.react).toBe('^19.3.1');
     expect(packageJson.dependencies['react-dom']).toBe('^19.3.1');
-    expect(packageJson.devDependencies['@vited/core']).toBe('^0.1.0');
+    expect(packageJson.devDependencies['@vited/core']).toBe('^0.2.0');
     expect(packageJson.devDependencies['react-dom']).toBeUndefined();
     expect(await readFile(path.join(projectPath, 'docs/README.md'), 'utf8')).toBe(
       '# Existing docs\n',

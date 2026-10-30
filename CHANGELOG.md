@@ -1,6 +1,12 @@
 # Changelog
 
-## Unreleased
+## 0.0.7 - 2026-10-30
+
+### Changed
+
+- Generate projects with `@vited/cli` 0.1.2, `@vited/core` 0.2.0, and `@vited/theme-mantine` 0.3.0.
+
+## 0.0.6 - 2026-10-29
 
 ### Added
 
