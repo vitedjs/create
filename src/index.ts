@@ -9,7 +9,11 @@ import { t, type Language } from './i18n.js';
 
 export type { PackageManager } from './github.js';
 
-export const THEMES = ['@vited/theme-mantine', '@vited/theme-bootstrap'] as const;
+export const THEMES = [
+  '@vited/theme-mantine',
+  '@vited/theme-bootstrap',
+  '@vited/theme-material',
+] as const;
 export type Theme = (typeof THEMES)[number];
 export type ProjectMode = 'create' | 'init';
 
@@ -44,6 +48,7 @@ const vitedPackages: Record<string, string> = {
   '@vited/core': '^0.4.0',
   '@vited/theme-mantine': '^0.5.0',
   '@vited/theme-bootstrap': '^0.1.1',
+  '@vited/theme-material': '^0.1.0',
   vite: '^8.3.5',
 };
 

@@ -23,7 +23,8 @@ pnpm dlx @vited/create ../my-docs
 ```
 
 The default theme is `@vited/theme-mantine`. Pass `--theme @vited/theme-bootstrap`
-to use the Bootstrap theme instead. The package manager is detected
+to use the Bootstrap theme, or `--theme @vited/theme-material` for the Material UI
+theme. The package manager is detected
 from the project configuration or the package manager used to run the command.
 Override it and skip automatic dependency installation with:
 
