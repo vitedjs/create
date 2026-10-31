@@ -140,6 +140,7 @@ export async function create({
 
   await mkdir(projectPath, { recursive: true });
   await ensureGitignoreEntry(projectPath, 'docs_dist');
+  await ensureTsconfigExclude(path.join(projectPath, 'tsconfig.json'), 'docs_dist');
   const docsPath = path.join(projectPath, 'docs');
   await mkdir(docsPath, { recursive: true });
   await writeFile(packageJsonPath, `${JSON.stringify(packageJson, undefined, 2)}\n`);
@@ -414,6 +415,39 @@ async function writeIfMissing(filePath: string, content: string): Promise<void> 
       throw error;
     }
   }
+}
+
+async function ensureTsconfigExclude(tsconfigPath: string, entry: string): Promise<void> {
+  let contents: string;
+  try {
+    contents = await readFile(tsconfigPath, 'utf8');
+  } catch (error) {
+    if (!isNodeError(error, 'ENOENT')) throw error;
+    // Projects without a TypeScript configuration need no exclude entry.
+    return;
+  }
+
+  let value: unknown;
+  try {
+    value = JSON.parse(contents);
+  } catch {
+    // tsconfig.json may contain comments or trailing commas; leave such files untouched.
+    return;
+  }
+  if (!isRecord(value)) return;
+
+  const exclude: unknown = value['exclude'];
+  if (exclude === undefined) {
+    value['exclude'] = [entry];
+  } else if (Array.isArray(exclude)) {
+    const entries = exclude as unknown[];
+    if (entries.some((item) => item === entry)) return;
+    entries.push(entry);
+  } else {
+    return;
+  }
+
+  await writeFile(tsconfigPath, `${JSON.stringify(value, undefined, 2)}\n`);
 }
 
 async function ensureGitignoreEntry(projectPath: string, entry: string): Promise<void> {

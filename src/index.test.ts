@@ -61,6 +61,47 @@ describe('create', () => {
     expect(await readFile(path.join(projectPath, '.gitignore'), 'utf8')).toBe('docs_dist\n');
     expect(existsSync(path.join(projectPath, '.github/workflows/pages.yaml'))).toBe(false);
     expect(existsSync(path.join(projectPath, 'index.html'))).toBe(false);
+    expect(existsSync(path.join(projectPath, 'tsconfig.json'))).toBe(false);
+  });
+
+  it('adds docs_dist to the exclude list of an existing tsconfig', async () => {
+    const projectPath = path.join(temporaryDirectory, 'typed-site');
+    await mkdir(projectPath);
+    await writeFile(
+      path.join(projectPath, 'tsconfig.json'),
+      JSON.stringify({ include: ['src'], exclude: ['dist'] }),
+    );
+
+    await create({ ...createOptions, directory: projectPath });
+
+    const tsconfig = JSON.parse(await readFile(path.join(projectPath, 'tsconfig.json'), 'utf8'));
+    expect(tsconfig.include).toEqual(['src']);
+    expect(tsconfig.exclude).toEqual(['dist', 'docs_dist']);
+  });
+
+  it('creates an exclude list when the tsconfig has none', async () => {
+    const projectPath = path.join(temporaryDirectory, 'unexcluded-site');
+    await mkdir(projectPath);
+    await writeFile(
+      path.join(projectPath, 'tsconfig.json'),
+      JSON.stringify({ compilerOptions: { strict: true } }),
+    );
+
+    await create({ ...createOptions, directory: projectPath });
+
+    const tsconfig = JSON.parse(await readFile(path.join(projectPath, 'tsconfig.json'), 'utf8'));
+    expect(tsconfig.exclude).toEqual(['docs_dist']);
+  });
+
+  it('leaves a tsconfig with comments untouched', async () => {
+    const projectPath = path.join(temporaryDirectory, 'commented-tsconfig');
+    await mkdir(projectPath);
+    const contents = '{\n  // Keep comments.\n  "include": ["src"]\n}\n';
+    await writeFile(path.join(projectPath, 'tsconfig.json'), contents);
+
+    await create({ ...createOptions, directory: projectPath });
+
+    expect(await readFile(path.join(projectPath, 'tsconfig.json'), 'utf8')).toBe(contents);
   });
 
   it('adds Vited setup to an existing project without replacing its files or scripts', async () => {
