@@ -9,7 +9,7 @@ import { t, type Language } from './i18n.js';
 
 export type { PackageManager } from './github.js';
 
-export const THEMES = ['@vited/theme-mantine'] as const;
+export const THEMES = ['@vited/theme-mantine', '@vited/theme-bootstrap'] as const;
 export type Theme = (typeof THEMES)[number];
 export type ProjectMode = 'create' | 'init';
 
@@ -43,6 +43,7 @@ const vitedPackages: Record<string, string> = {
   '@vited/cli': '^0.1.4',
   '@vited/core': '^0.4.0',
   '@vited/theme-mantine': '^0.5.0',
+  '@vited/theme-bootstrap': '^0.1.1',
   vite: '^8.3.5',
 };
 
@@ -300,7 +301,7 @@ function addVitedConfiguration(packageJson: ProjectPackageJson, projectPath: str
   const devDependencies = getRecord(packageJson['devDependencies'], 'devDependencies');
 
   for (const [name, version] of Object.entries(vitedPackages)) {
-    if (name === '@vited/theme-mantine' && theme !== name) {
+    if (THEMES.some((item) => item === name) && theme !== name) {
       continue;
     }
     if (dependencies[name] === undefined && devDependencies[name] === undefined) {

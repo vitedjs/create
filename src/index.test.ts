@@ -64,6 +64,24 @@ describe('create', () => {
     expect(existsSync(path.join(projectPath, 'tsconfig.json'))).toBe(false);
   });
 
+  it('adds only the selected theme package', async () => {
+    const projectPath = path.join(temporaryDirectory, 'bootstrap-site');
+
+    await create({
+      ...createOptions,
+      directory: projectPath,
+      theme: '@vited/theme-bootstrap',
+    });
+
+    const packageJson = JSON.parse(await readFile(path.join(projectPath, 'package.json'), 'utf8'));
+    expect(packageJson.devDependencies).toMatchObject({
+      '@vited/theme-bootstrap': '^0.1.1',
+    });
+    expect(packageJson.devDependencies['@vited/theme-mantine']).toBeUndefined();
+    const config = await readFile(path.join(projectPath, 'vited.config.ts'), 'utf8');
+    expect(config).toContain('theme: "@vited/theme-bootstrap"');
+  });
+
   it('adds docs_dist to the exclude list of an existing tsconfig', async () => {
     const projectPath = path.join(temporaryDirectory, 'typed-site');
     await mkdir(projectPath);
