@@ -40,8 +40,8 @@ describe('create', () => {
     });
     expect(packageJson.devDependencies).toMatchObject({
       '@vited/cli': '^0.1.4',
-      '@vited/core': '^0.4.0',
-      '@vited/theme-mantine': '^0.5.0',
+      '@vited/core': '^0.4.2',
+      '@vited/theme-mantine': '^0.5.2',
     });
     const config = await readFile(path.join(projectPath, 'vited.config.ts'), 'utf8');
     expect(config).toContain('base: "/"');
@@ -75,11 +75,25 @@ describe('create', () => {
 
     const packageJson = JSON.parse(await readFile(path.join(projectPath, 'package.json'), 'utf8'));
     expect(packageJson.devDependencies).toMatchObject({
-      '@vited/theme-bootstrap': '^0.1.1',
+      '@vited/theme-bootstrap': '^0.1.2',
     });
     expect(packageJson.devDependencies['@vited/theme-mantine']).toBeUndefined();
     const config = await readFile(path.join(projectPath, 'vited.config.ts'), 'utf8');
     expect(config).toContain('theme: "@vited/theme-bootstrap"');
+  });
+
+  it('uses the current Material theme version', async () => {
+    const projectPath = path.join(temporaryDirectory, 'material-site');
+
+    await create({
+      ...createOptions,
+      directory: projectPath,
+      theme: '@vited/theme-material',
+    });
+
+    const packageJson = JSON.parse(await readFile(path.join(projectPath, 'package.json'), 'utf8'));
+    expect(packageJson.devDependencies['@vited/theme-material']).toBe('^0.1.1');
+    expect(packageJson.devDependencies['@vited/theme-mantine']).toBeUndefined();
   });
 
   it('adds docs_dist to the exclude list of an existing tsconfig', async () => {
@@ -149,7 +163,7 @@ describe('create', () => {
     });
     expect(packageJson.dependencies.react).toBe('^19.3.1');
     expect(packageJson.dependencies['react-dom']).toBe('^19.3.1');
-    expect(packageJson.devDependencies['@vited/core']).toBe('^0.4.0');
+    expect(packageJson.devDependencies['@vited/core']).toBe('^0.4.2');
     expect(packageJson.devDependencies['react-dom']).toBeUndefined();
     expect(await readFile(path.join(projectPath, 'docs/README.md'), 'utf8')).toBe(
       '# Existing docs\n',

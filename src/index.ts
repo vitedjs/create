@@ -45,10 +45,10 @@ const reactPackages = ['react', 'react-dom'] as const;
 
 const vitedPackages: Record<string, string> = {
   '@vited/cli': '^0.1.4',
-  '@vited/core': '^0.4.0',
-  '@vited/theme-mantine': '^0.5.0',
-  '@vited/theme-bootstrap': '^0.1.1',
-  '@vited/theme-material': '^0.1.0',
+  '@vited/core': '^0.4.2',
+  '@vited/theme-mantine': '^0.5.2',
+  '@vited/theme-bootstrap': '^0.1.2',
+  '@vited/theme-material': '^0.1.1',
   vite: '^8.3.5',
 };
 

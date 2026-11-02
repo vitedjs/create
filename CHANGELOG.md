@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.9 - 2026-11-02
+
+### Changed
+
+- Generate projects with `@vited/core` 0.4.2 and the latest Mantine, Bootstrap, and Material themes.
+
 ## 0.0.8 - 2026-10-30
 
 ### Changed
