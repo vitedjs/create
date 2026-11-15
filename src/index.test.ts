@@ -39,9 +39,9 @@ describe('create', () => {
       'docs:build': 'vited build',
     });
     expect(packageJson.devDependencies).toMatchObject({
-      '@vited/cli': '^0.1.5',
-      '@vited/core': '^0.5.0',
-      '@vited/theme-mantine': '^0.6.0',
+      '@vited/cli': '^0.1.6',
+      '@vited/core': '^0.6.0',
+      '@vited/theme-mantine': '^0.7.1',
     });
     const config = await readFile(path.join(projectPath, 'vited.config.ts'), 'utf8');
     expect(config).toContain('base: "/"');
@@ -75,7 +75,7 @@ describe('create', () => {
 
     const packageJson = JSON.parse(await readFile(path.join(projectPath, 'package.json'), 'utf8'));
     expect(packageJson.devDependencies).toMatchObject({
-      '@vited/theme-bootstrap': '^0.2.0',
+      '@vited/theme-bootstrap': '^0.3.1',
     });
     expect(packageJson.devDependencies['@vited/theme-mantine']).toBeUndefined();
     const config = await readFile(path.join(projectPath, 'vited.config.ts'), 'utf8');
@@ -92,7 +92,7 @@ describe('create', () => {
     });
 
     const packageJson = JSON.parse(await readFile(path.join(projectPath, 'package.json'), 'utf8'));
-    expect(packageJson.devDependencies['@vited/theme-material']).toBe('^0.2.0');
+    expect(packageJson.devDependencies['@vited/theme-material']).toBe('^0.3.1');
     expect(packageJson.devDependencies['@vited/theme-mantine']).toBeUndefined();
   });
 
@@ -163,7 +163,7 @@ describe('create', () => {
     });
     expect(packageJson.dependencies.react).toBe('^19.3.1');
     expect(packageJson.dependencies['react-dom']).toBe('^19.3.1');
-    expect(packageJson.devDependencies['@vited/core']).toBe('^0.5.0');
+    expect(packageJson.devDependencies['@vited/core']).toBe('^0.6.0');
     expect(packageJson.devDependencies['react-dom']).toBeUndefined();
     expect(await readFile(path.join(projectPath, 'docs/README.md'), 'utf8')).toBe(
       '# Existing docs\n',
